@@ -42,8 +42,8 @@ func takeInput() (*User, error) {
 	if scanned == 0 {
 		return nil, fmt.Errorf("number of subjects is required")
 	}
-	if subjectLen == 0 {
-		return nil, fmt.Errorf("number of subjects can not be zero")
+	if subjectLen <= 0 {
+		return nil, fmt.Errorf("invalid number of subjects")
 	}
 
 	var subject Subject
