@@ -1,7 +1,12 @@
 package main
 
-import "fmt"
-import "strings"
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
 
 type Subject struct {
 	Name  string
@@ -14,7 +19,7 @@ type User struct {
 }
 
 func main() {
-	user, err := takeInput()
+	user, err := takeUserInput()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -22,45 +27,57 @@ func main() {
 	user.display()
 }
 
-func takeInput() (*User, error) {
+func getNonEmptyInput(prompt string) string {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print(prompt)
+	for {
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println("Failed to read input")
+			continue
+		}
+		input = strings.TrimSpace(input)
+		if input == "" {
+			fmt.Println("Input can not be empty")
+		}
+		return input
+	}
+}
+
+func takeUserInput() (*User, error) {
 	var user User
 	var subjectLen int
-	fmt.Print("Your Name: ")
-	scanned, err := fmt.Scanln(&user.Name)
-	if err != nil {
-		return nil, fmt.Errorf("invalid User Name")
-	}
-	if scanned == 0 {
-		return nil, fmt.Errorf("name is required")
-	}
+	name := getNonEmptyInput("Your Name: ")
+	user.Name = name
 
-	fmt.Print("Number of subjects: ")
-	scanned, err = fmt.Scanf("%d", &subjectLen)
-	if err != nil {
-		return nil, fmt.Errorf("number of subjects is expected to be Integer")
-	}
-	if scanned == 0 {
-		return nil, fmt.Errorf("number of subjects is required")
-	}
-	if subjectLen <= 0 {
-		return nil, fmt.Errorf("invalid number of subjects")
+	for {
+		countStr := getNonEmptyInput("Number of subjects: ")
+		count, err := strconv.Atoi(countStr)
+		if err != nil {
+			fmt.Println("Input must be an integer")
+			continue
+		}
+		subjectLen = count
+		break
 	}
 
 	var subject Subject
-	fmt.Printf("Enter subject name and grade point %d times, \nEg. Philosophy 3.45\n", subjectLen)
 	for subjectLen > 0 {
-		scanned, err := fmt.Scanf("%s %f", &subject.Name, &subject.Grade)
-		if err != nil {
-			fmt.Println("⚠️ Invalid format or argument: Eg, Philosophy 3.45")
-			continue
-		}
-		if scanned != 2 {
-			fmt.Println("⚠️ Both subject and grade are required")
-			continue
-		}
-		if subject.Grade <= 0 || subject.Grade > 100 {
-			fmt.Println("⚠️  Invalid Grade range, Grade must be between 0 and 4")
-			continue
+		name := getNonEmptyInput("Subject Name: ")
+		subject.Name = name
+		for {
+			gradeStr := getNonEmptyInput("Grade: ")
+			grade, err := strconv.ParseFloat(gradeStr, 64)
+			if err != nil {
+				fmt.Println("grade must in range of 0 and 100")
+				continue
+			}
+			if grade <= 0 || grade > 100 {
+				fmt.Println("⚠️  Invalid Grade range, Grade must be between 0 and 100")
+				continue
+			}
+			subject.Grade = grade
+			break
 		}
 		user.Subjects = append(user.Subjects, subject)
 		subjectLen -= 1
